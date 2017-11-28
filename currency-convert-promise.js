@@ -5,13 +5,27 @@ const axios = require("axios");
 
 const get_exchange_rate = (from, to) => {
     return axios.get(`https://api.fixer.io/latest?base=${from}`).then((response) => {
-        return response.data.rates[to];
+        let rate = response.data.rates[to];
+        if(rate){
+            return rate;
+        }else{
+            throw new Error(`Unable to get exchange rate from ${from} to ${to}`);
+        }
+    }).catch((e) => {
+        throw new Error(`Unable to get exchange rate from ${from} to ${to}`);
     });
 };
 
 const get_countries = (currency) => {
     return axios.get(`https://restcountries.eu/rest/v2/currency/${currency}`).then((response) => {
-        return response.data.map((country) => country.name);
+        if(response.data.length > 0){
+            return response.data.map((country) => country.name);
+        } else {
+            throw new Error(`Unable to get countries that used ${currency}`)
+        }
+
+    }).catch((e) => {
+        throw new Error(`Unable to get countries that used ${currency}`)
     });
 }
 
@@ -24,9 +38,13 @@ const convert_currency = (from, to, amount) => {
         const exchange_amount = amount * rate;
 
         return `${amount} ${from} is worth ${exchange_amount} ${to}. ${to} can be used in the following countries ${countries.join(', ')}`;
+    }).catch((e) => {
+        throw new Error(`Unable to get currency ${amount} from ${from} to ${to}`)
     });
 };
 
 convert_currency("EUR", "USD", 300).then((data) => {
     console.log(data);
+}).catch((e) => {
+    console.log(e);
 })
